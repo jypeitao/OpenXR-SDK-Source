@@ -263,6 +263,8 @@ elseif(ANDROID)
         ""
         CACHE STRING "Suffix for generated Android artifacts."
     )
+    add_definitions(-DXR_PRIORITIZE_LOAD_RUNTIME_FROM_LOADER_LOCATION)
+    add_definitions(-DXR_RUNTIME_FILE_NAME="libopenxr_monado.so")
 elseif(PRESENTATION_BACKEND MATCHES "xlib")
     add_definitions(-DXR_USE_PLATFORM_XLIB)
 elseif(PRESENTATION_BACKEND MATCHES "xcb")

@@ -23,7 +23,7 @@ android {
     defaultConfig {
         applicationId "org.khronos.openxr.hello_xr"
         // for Vulkan, need at least 24
-        minSdkVersion 24
+        minSdkVersion 26
 
         versionName = project.versionOpenXR.toString() + project.versionQualifier
         versionCode = project.versionOpenXR.getVersionCode()
@@ -104,4 +104,3 @@ if (keystorePropertiesFilename) {
         android.buildTypes.release.signingConfig android.signingConfigs.release
     }
 }
-

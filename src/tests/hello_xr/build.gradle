@@ -104,3 +104,9 @@ if (keystorePropertiesFilename) {
         android.buildTypes.release.signingConfig android.signingConfigs.release
     }
 }
+
+dependencies {
+    if (findProject(':src:xrt:targets:openxr_runtime') != null) {
+        implementation project(':src:xrt:targets:openxr_runtime')
+    }
+}

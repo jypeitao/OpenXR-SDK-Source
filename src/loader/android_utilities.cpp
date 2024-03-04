@@ -20,6 +20,12 @@
 #include <vector>
 #include <android/log.h>
 
+#ifdef XR_PRIORITIZE_LOAD_RUNTIME_FROM_LOADER_LOCATION
+#include <dlfcn.h>
+#include <libgen.h>
+#include <unistd.h>
+#endif
+
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "OpenXR-Loader", __VA_ARGS__)
 #define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, "OpenXR-Loader", __VA_ARGS__)
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "OpenXR-Loader", __VA_ARGS__)
@@ -291,7 +297,64 @@ static bool getActiveRuntimeCursor(wrap::android::content::Context const &contex
     return true;
 }
 
+#ifdef XR_PRIORITIZE_LOAD_RUNTIME_FROM_LOADER_LOCATION
+
+    static std::string getSelfPath() {
+        Dl_info info{};
+        std::string path;
+        if (dladdr((void *) &getSelfPath, &info)) {
+            path = info.dli_fname;
+        }
+        return dirname(path.c_str());
+    }
+
+    static bool isNativeLibExist(std::string &libPath) {
+        if (access(libPath.c_str(), F_OK) == 0) {
+            return true;
+        }
+
+        // for uncompressed native libs /data/app/../../base.apk!/lib/ABI/libopenxr_monado.so
+        void *handle = dlopen(libPath.c_str(), RTLD_LAZY | RTLD_LOCAL);
+        if (handle != NULL) {
+            dlclose(handle);
+            return true;
+        }
+        return false;
+    }
+
+    // no functions
+    static int getActiveRuntimeVirtualManifestFromSelf(Json::Value &virtualManifest) {
+        // TODO Keep the same name as runtime
+#ifdef XR_RUNTIME_FILE_NAME
+        constexpr auto runtimeFileName = XR_RUNTIME_FILE_NAME;
+#else
+        constexpr auto runtimeFileName = "libopenxr_monado.so";
+#endif
+
+        auto libDir = getSelfPath();
+        auto lib_path = libDir + "/" + runtimeFileName;
+
+        ALOGI("check path:%s", lib_path.c_str());
+        if (!isNativeLibExist(lib_path)) {
+            return -1;
+        }
+
+
+        JsonManifestBuilder builder{"runtime", lib_path};
+        virtualManifest = builder.build();
+
+        return 0;
+    }
+#endif
+
 int getActiveRuntimeVirtualManifest(wrap::android::content::Context const &context, Json::Value &virtualManifest) {
+
+#ifdef XR_PRIORITIZE_LOAD_RUNTIME_FROM_LOADER_LOCATION
+    if (getActiveRuntimeVirtualManifestFromSelf(virtualManifest) == 0) {
+        return 0;
+    }
+#endif
+
     jni::Array<std::string> projection = makeArray({active_runtime::Columns::PACKAGE_NAME, active_runtime::Columns::NATIVE_LIB_DIR,
                                                     active_runtime::Columns::SO_FILENAME, active_runtime::Columns::HAS_FUNCTIONS});
 

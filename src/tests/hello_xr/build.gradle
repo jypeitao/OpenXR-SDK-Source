@@ -6,7 +6,7 @@
 // to build the "hello_xr" sample application
 
 plugins {
-    id 'com.android.application' version '7.4.2'
+    id 'com.android.application' version '8.1.0'
 }
 
 

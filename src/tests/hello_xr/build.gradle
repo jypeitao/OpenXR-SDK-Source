@@ -64,22 +64,26 @@ android {
         }
     }
 
-    flavorDimensions 'api'
+    flavorDimensions = ['deployment']
 
     productFlavors {
         OpenGLES {
-            dimension 'api'
+            dimension 'deployment'
             applicationIdSuffix '.opengles'
             externalNativeBuild.cmake.arguments += '-DHELLOXR_DEFAULT_GRAPHICS_PLUGIN=OpenGLES'
 
             resValue "string", "app_name", "Hello XR (OpenGL ES)"
+
+            matchingFallbacks = ['inProcess']
         }
         Vulkan {
-            dimension 'api'
+            dimension 'deployment'
             applicationIdSuffix '.vulkan'
             externalNativeBuild.cmake.arguments += '-DHELLOXR_DEFAULT_GRAPHICS_PLUGIN=Vulkan'
 
             resValue "string", "app_name", "Hello XR (Vulkan)"
+
+            matchingFallbacks = ['inProcess']
         }
     }
 }

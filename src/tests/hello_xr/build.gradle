@@ -52,6 +52,12 @@ android {
         }
     }
 
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

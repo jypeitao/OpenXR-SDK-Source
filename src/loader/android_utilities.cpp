@@ -299,6 +299,68 @@ static bool getActiveRuntimeCursor(wrap::android::content::Context const &contex
 
 #ifdef XR_PRIORITIZE_LOAD_RUNTIME_FROM_LOADER_LOCATION
 
+#include <sys/system_properties.h>
+
+    struct android_read_arg {
+        char *chars;
+        size_t char_count;
+    };
+
+    static void
+    android_on_property_read(void *cookie, const char *name, const char *value, uint32_t serial) {
+        struct android_read_arg *a = (struct android_read_arg *) cookie;
+
+        snprintf(a->chars, a->char_count, "%s", value);
+    }
+
+    static const char *get_option_raw(char *chars, size_t char_count, const char *name) {
+        const struct prop_info *pi = __system_property_find(name);
+        if (pi == NULL) {
+            return NULL;
+        }
+
+        struct android_read_arg a = {.chars = chars, .char_count = char_count};
+        __system_property_read_callback(pi, &android_on_property_read, &a);
+
+        return chars;
+    }
+
+    static long debug_string_to_num(const char *string, long _default) {
+
+        if (string == NULL) {
+            return _default;
+        }
+
+        char *endptr;
+        long ret = strtol(string, &endptr, 0);
+
+        // Restore the default value when no digits were found.
+        if (string == endptr) {
+            return _default;
+        }
+
+        return ret;
+    }
+
+    static long debug_get_num_option(const char *name, long _default) {
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+        char chars[1024];
+        const char *raw = get_option_raw(chars, ARRAY_SIZE(chars), name);
+
+        long ret = debug_string_to_num(raw, _default);
+
+        return ret;
+    }
+
+    static bool isForceUseBroker() {
+        static auto force = [] {
+            return debug_get_num_option("debug.force.use.broker", 0) == 1;
+        }();
+
+        return force;
+    }
+
     static std::string getSelfPath() {
         Dl_info info{};
         std::string path;
@@ -333,6 +395,11 @@ static bool getActiveRuntimeCursor(wrap::android::content::Context const &contex
 
         auto libDir = getSelfPath();
         auto lib_path = libDir + "/" + runtimeFileName;
+
+        if (isForceUseBroker()) {
+            ALOGI("force use broker");
+            return -1;
+        }
 
         ALOGI("check path:%s", lib_path.c_str());
         if (!isNativeLibExist(lib_path)) {

@@ -14,6 +14,8 @@ plugins {
 project.ext.repoRoot = file('../../../')
 apply from: file('../../version.gradle')
 
+def outOfProcess = true
+
 android {
     compileSdk 34
     ndkVersion "23.2.8568313"
@@ -80,7 +82,11 @@ android {
 
             resValue "string", "app_name", "Hello XR (OpenGL ES)"
 
-            matchingFallbacks = ['outOfProcess']
+            if (outOfProcess) {
+                matchingFallbacks = ['outOfProcess']
+            } else {
+                matchingFallbacks = ['inProcess']
+            }
         }
         Vulkan {
             dimension 'deployment'
@@ -89,7 +95,11 @@ android {
 
             resValue "string", "app_name", "Hello XR (Vulkan)"
 
-            matchingFallbacks = ['inProcess']
+            if (outOfProcess) {
+                matchingFallbacks = ['outOfProcess']
+            } else {
+                matchingFallbacks = ['inProcess']
+            }
         }
     }
 }
@@ -119,5 +129,8 @@ dependencies {
     if (findProject(':src:xrt:targets:openxr_runtime') != null) {
         implementation project(':src:xrt:targets:openxr_runtime')
         implementation project(':src:xrt:auxiliary')
+        if (outOfProcess) {
+            implementation project(':src:xrt:ipc')
+        }
     }
 }

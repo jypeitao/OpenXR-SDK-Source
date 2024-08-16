@@ -6,7 +6,7 @@
 // to build the "hello_xr" sample application
 
 plugins {
-    id 'com.android.application' version '8.1.0'
+    id 'com.android.application' version '8.5.0'
 }
 
 
@@ -15,7 +15,7 @@ project.ext.repoRoot = file('../../../')
 apply from: file('../../version.gradle')
 
 android {
-    compileSdk 33
+    compileSdk 34
     ndkVersion "23.2.8568313"
     buildToolsVersion = "34.0.0"
     namespace 'org.khronos.openxr.hello_xr'
@@ -118,5 +118,6 @@ if (keystorePropertiesFilename) {
 dependencies {
     if (findProject(':src:xrt:targets:openxr_runtime') != null) {
         implementation project(':src:xrt:targets:openxr_runtime')
+        implementation project(':src:xrt:auxiliary')
     }
 }
